@@ -1,3 +1,4 @@
+#-----------------------------------IMPORTING NECESSARY LIBRARIES AND PACKAGES------------------------------------#
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -5,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
+#---------------------------------LOADING DATASET AND DATA PREPROCESSING-------------------------------------------#
 data=pd.read_csv('IRIS.csv')
 
 X=data.iloc[:,:-1].values
@@ -19,7 +21,11 @@ enc=preprocessing.OneHotEncoder()
 enc.fit(Y)
 onehotlabels=enc.transform(Y).toarray()
 Y=onehotlabels
+#-----------------------------------------SPLITTING THE DATA INTO TRAINING AND TESTING---------------------------------------------#
+
 X_train,X_test,Y_train,Y_test=train_test_split(X,Y,test_size=0.2,random_state=0)
+
+#----------------------------------------DEFINING VARIOUS ACTIVATION FUNCTIONS AND THEIR DERIVATIVES-------------------------------#
 def ReLU(x):
 	return (abs(x.astype(float))+x.astype(float))/2
 
@@ -40,6 +46,7 @@ def sigmoid(x):
 def sigmoid_derivative(x):
 	return x*(1-x)
 
+#-------------------------------------CONSTRUCTING OUR NEURAL NETWORK CLASS/STRUCTURE-----------------------------------------#
 class Neural_Network:
 	def __init__(self,x,y):
 		self.input=x
@@ -53,29 +60,39 @@ class Neural_Network:
 		self.output=sigmoid(np.dot(self.layer1,self.weights2))
 
 	def BackPropogation(self):
-		lr=2
 		m=len(self.input)
 		d_weights2=-(1/m)*np.dot(self.layer1.T,(self.y-self.output)*sigmoid_derivative(self.output))
 		d_weights1 =-(1/m)*np.dot(self.input.T, (np.dot((self.y - self.output) * sigmoid_derivative(self.output), self.weights2.T) * ReLU_derivative(self.layer1)))
 		self.weights2=self.weights2 - lr*d_weights2
 		self.weights1=self.weights1 - lr*d_weights1
 	def predict(self,X):
-		self.input=X
-		self.layer1=ReLU(np.dot(self.input,self.weights1))
-		self.output=sigmoid(np.dot(self.layer1,self.weights2))
+		self.layert_1=ReLU(np.dot(X,self.weights1))
+		self.layert_2=ReLU(np.dot(self.layert_1,self.weights2))
+		return sigmoid(np.dot(self.layert_2,self.weights3))
+
+#------------------------------------------{TRAINING OUR NETWORK OVER THE TRAINING DATA AND---------------------------------# 
+#------------------------------------------EVALUATING VARIOUS PARAMETERS AFTER EACH EPOCH}----------------------------------#
 
 epochs=10000
+lr=2
+n=len(X_test)
 m=len(X)
 nn1=Neural_Network(X_train,Y_train)
 for i in range(epochs):
 	nn1.FeedForward()
+	y_predict_train=enc.inverse_transform(nn1.output.round())
+	y_predict_test=enc.inverse_transform(nn1.predict(X_test).round())
+	y_train=enc.inverse_transform(Y_train)
+	y_test=enc.inverse_transform(Y_test)
+	train_accuracy=(m-np.count_nonzero(y_train-y_predict_train))/m
+	test_accuracy=(n-np.count_nonzero(y_test-y_predict_test))/n
 	nn1.BackPropogation()
 	cost=(1/m)*np.sum(np.square(nn1.y-nn1.output))
-	print("cost after iteration {} : {}".format(i,cost))
-nn1.predict(X_test)
-Y_predict=enc.inverse_transform(nn1.output.round())
-Y_test=enc.inverse_transform(Y_test)
-temp=Y_test-Y_predict
-accuracy=(len(Y_predict)-np.count_nonzero(temp))/len(Y_predict)
-print("The accuracy of the model in {}".format(accuracy))
+	print("Epoch {}/{} ==============================================================:- ".format(i+1,epochs))
+	print("MSE_Cost: {} , Train_Accuracy: {} , Test_Accuracy: {} ".format(cost,train_accuracy,test_accuracy))
 
+output=nn1.predict(X_test)
+Y_predict=enc.inverse_transform(output.round())
+Y_test=enc.inverse_transform(Y_test)
+accuracy=(len(Y_predict)-np.count_nonzero(Y_test-Y_predict))/len(Y_predict)
+print("The accuracy of the model is {}".format(accuracy))
