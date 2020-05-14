@@ -48,10 +48,10 @@ def sigmoid_derivative(x):
 
 #-------------------------------------CONSTRUCTING OUR NEURAL NETWORK CLASS/STRUCTURE-----------------------------------------#
 class Neural_Network:
-	def __init__(self,x,y):
+	def __init__(self,x,y,h):
 		self.input=x
-		self.weights1=np.random.randn(self.input.shape[1],10)
-		self.weights2=np.random.randn(10,3)
+		self.weights1=np.random.randn(self.input.shape[1],h)
+		self.weights2=np.random.randn(h,3)
 		self.y=y
 		self.output=np.zeros(y.shape)
 
@@ -67,14 +67,13 @@ class Neural_Network:
 		self.weights1=self.weights1 - lr*d_weights1
 	def predict(self,X):
 		self.layert_1=ReLU(np.dot(X,self.weights1))
-		self.layert_2=ReLU(np.dot(self.layert_1,self.weights2))
-		return sigmoid(np.dot(self.layert_2,self.weights3))
+		return sigmoid(np.dot(self.layert_1,self.weights2))
 
 #------------------------------------------{TRAINING OUR NETWORK OVER THE TRAINING DATA AND---------------------------------# 
 #------------------------------------------EVALUATING VARIOUS PARAMETERS AFTER EACH EPOCH}----------------------------------#
 
 epochs=10000
-lr=2
+lr=0.5
 n=len(X_test)
 m=len(X)
 nn1=Neural_Network(X_train,Y_train)
